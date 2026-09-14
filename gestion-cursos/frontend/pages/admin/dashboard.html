@@ -7,6 +7,144 @@
   </head>
   <body>
     <h1>Dashboard Administrador</h1>
-    <p>Panel principal del administrador.</p>
+    <p id="userInfo">Cargando usuario...</p>
+    <button id="logoutBtn">Cerrar sesión</button>
+
+    <section>
+      <h2>Registrar estudiante</h2>
+      <form id="studentForm">
+        <input id="studentName" type="text" placeholder="Nombre del estudiante" required />
+        <input id="studentEmail" type="email" placeholder="correo@institucion.com" required />
+        <button type="submit">Guardar estudiante</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Crear curso</h2>
+      <form id="courseForm">
+        <input id="courseName" type="text" placeholder="Nombre del curso" required />
+        <input id="courseTeacher" type="email" placeholder="Correo del docente" required />
+        <button type="submit">Crear curso</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Estudiantes registrados</h2>
+      <ul id="studentList"></ul>
+    </section>
+
+    <section>
+      <h2>Cursos del sistema</h2>
+      <ul id="courseList"></ul>
+    </section>
+
+    <script type="module">
+      import { signOut, onAuthStateChanged } from "firebase/auth";
+      import { auth } from "../../js/config/firebaseConfig.js";
+
+      const ensureSeedData = () => {
+        if (!localStorage.getItem("gc_courses")) {
+          localStorage.setItem("gc_courses", JSON.stringify([
+            { id: 1, nombre: "Microservicios", docente: "docente@institucion.com" },
+            { id: 2, nombre: "Bases de Datos", docente: "docente@institucion.com" }
+          ]));
+        }
+
+        if (!localStorage.getItem("gc_users")) {
+          localStorage.setItem("gc_users", JSON.stringify([
+            { uid: "admin-seed", email: "admin@institucion.com", role: "admin", name: "Administrador" },
+            { uid: "docente-seed", email: "docente@institucion.com", role: "docente", name: "Docente" },
+            { uid: "estudiante-seed", email: "estudiante@institucion.com", role: "estudiante", name: "Estudiante" }
+          ]));
+        }
+
+        if (!localStorage.getItem("gc_grades")) {
+          localStorage.setItem("gc_grades", JSON.stringify([
+            { studentEmail: "estudiante@institucion.com", courseId: 1, nota: 9.5 }
+          ]));
+        }
+      };
+
+      const getUsers = () => JSON.parse(localStorage.getItem("gc_users") || "[]");
+      const getCourses = () => JSON.parse(localStorage.getItem("gc_courses") || "[]");
+
+      const renderStudents = () => {
+        const students = getUsers().filter((user) => user.role === "estudiante");
+        const list = document.getElementById("studentList");
+        list.innerHTML = students.length
+          ? students.map((student) => `<li>${student.name} - ${student.email}</li>`).join("")
+          : "<li>No hay estudiantes registrados.</li>";
+      };
+
+      const renderCourses = () => {
+        const courses = getCourses();
+        const list = document.getElementById("courseList");
+        list.innerHTML = courses.length
+          ? courses.map((course) => `<li>${course.nombre} - Docente: ${course.docente}</li>`).join("")
+          : "<li>No hay cursos creados.</li>";
+      };
+
+      onAuthStateChanged(auth, (user) => {
+        if (!user) {
+          window.location.href = "../../index.html";
+          return;
+        }
+
+        const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+        const role = currentUser?.role || "admin";
+
+        if (role !== "admin") {
+          window.location.href = "../" + role + "/dashboard.html";
+          return;
+        }
+
+        document.getElementById("userInfo").textContent = `Sesión activa: ${user.email || currentUser?.email || "usuario@correo.com"}`;
+        ensureSeedData();
+        renderStudents();
+        renderCourses();
+      });
+
+      document.getElementById("studentForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const name = document.getElementById("studentName").value.trim();
+        const email = document.getElementById("studentEmail").value.trim();
+
+        if (!name || !email) return;
+
+        const users = getUsers();
+        if (!users.some((item) => item.email.toLowerCase() === email.toLowerCase())) {
+          users.push({ uid: crypto.randomUUID(), email, role: "estudiante", name });
+          localStorage.setItem("gc_users", JSON.stringify(users));
+        }
+
+        document.getElementById("studentForm").reset();
+        renderStudents();
+      });
+
+      document.getElementById("courseForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const nombre = document.getElementById("courseName").value.trim();
+        const docente = document.getElementById("courseTeacher").value.trim();
+
+        if (!nombre || !docente) return;
+
+        const courses = getCourses();
+        courses.push({
+          id: Date.now(),
+          nombre,
+          docente,
+        });
+
+        localStorage.setItem("gc_courses", JSON.stringify(courses));
+        document.getElementById("courseForm").reset();
+        renderCourses();
+      });
+
+      document.getElementById("logoutBtn").addEventListener("click", async () => {
+        await signOut(auth);
+        localStorage.removeItem("currentUser");
+        window.location.href = "../../index.html";
+      });
+    </script>
   </body>
 </html>

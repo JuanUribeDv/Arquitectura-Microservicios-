@@ -4,8 +4,8 @@
   "description": "Microservicio para la matrícula e inscripción de estudiantes en cursos.",
   "main": "index.js",
   "scripts": {
-    "start": "node src/app.js",
-    "dev": "nodemon src/app.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
   "keywords": [],
   "author": "",
