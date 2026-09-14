@@ -11,4 +11,11 @@ async function createCourse(courseData) {
   });
 }
 
-export { getCourses, createCourse };
+async function assignCourseTeacher(courseId, teacherUid) {
+  return apiRequest(`/courses/${courseId}/teacher`, {
+    method: "PATCH",
+    body: JSON.stringify({ teacherUid }),
+  });
+}
+
+export { getCourses, createCourse, assignCourseTeacher };

@@ -53,6 +53,7 @@ app.post('/api/users/profile', (req, res) => proxyToService('users', req, res));
 app.get('/api/courses', (req, res) => proxyToService('courses', req, res));
 app.get('/api/courses/:id', (req, res) => proxyToService('courses', req, res));
 app.post('/api/courses', (req, res) => proxyToService('courses', req, res));
+app.patch('/api/courses/:id/teacher', (req, res) => proxyToService('courses', req, res));
 
 app.get('/api/enrollments', (req, res) => proxyToService('enrollments', req, res));
 app.get('/api/enrollments/:id', (req, res) => proxyToService('enrollments', req, res));

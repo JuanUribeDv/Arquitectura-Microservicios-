@@ -48,4 +48,16 @@ app.post("/api/courses", authenticatedUser, requireAdmin, async (req, res) => {
   res.status(201).json({ id: reference.id, name: course.name, teacherUid: course.teacherUid, description: course.description, credits: course.credits });
 });
 
+app.patch("/api/courses/:id/teacher", authenticatedUser, requireAdmin, async (req, res) => {
+  const { teacherUid } = req.body;
+  if (!teacherUid) return res.status(400).json({ message: "teacherUid es obligatorio" });
+  const teacher = await db.collection("users").doc(teacherUid).get();
+  if (!teacher.exists || teacher.data().role !== "docente") return res.status(400).json({ message: "El usuario seleccionado no tiene rol docente" });
+  const courseReference = db.collection("courses").doc(req.params.id);
+  const course = await courseReference.get();
+  if (!course.exists) return res.status(404).json({ message: "Curso no encontrado" });
+  await courseReference.update({ teacherUid });
+  res.json({ id: course.id, ...course.data(), teacherUid });
+});
+
 app.listen(port, () => console.log(`Courses Service corriendo en http://localhost:${port}`));

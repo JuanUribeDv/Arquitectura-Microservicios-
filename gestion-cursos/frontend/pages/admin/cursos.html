@@ -32,6 +32,17 @@
       </div>
       <button type="submit">Crear curso</button>
     </form>
+    <form class="formulario-inline" id="formulario-asignacion">
+      <div>
+        <label for="cursoSeleccionado">Materia</label>
+        <select id="cursoSeleccionado" required><option value="">Cargando materias...</option></select>
+      </div>
+      <div>
+        <label for="docenteSeleccionado">Docente</label>
+        <select id="docenteSeleccionado" required><option value="">Cargando docentes...</option></select>
+      </div>
+      <button type="submit">Asignar docente</button>
+    </form>
     <p class="mensaje-error" id="mensaje-error"></p>
 
     <table>
@@ -46,13 +57,27 @@
     import { signOut } from "firebase/auth";
     import { auth } from "../../js/config/firebaseConfig.js";
     import { requireRole } from "../../js/auth/authGuard.js";
-    import { getCourses, createCourse } from "../../js/services/coursesApi.js";
+    import { getCourses, createCourse, assignCourseTeacher } from "../../js/services/coursesApi.js";
+    import { getUsers } from "../../js/services/usersApi.js";
+    let cursos = [];
+
     async function cargarCursos() {
-      const cursos = await getCourses();
+      cursos = await getCourses();
       const cuerpo = document.getElementById("cuerpo-tabla-cursos");
       cuerpo.innerHTML = cursos
         .map((c) => `<tr><td>${c.name || c.nombre}</td><td>${c.teacherUid || c.docenteUid}</td><td>${c.credits ?? c.creditos ?? 0}</td></tr>`)
         .join("");
+      document.getElementById("cursoSeleccionado").innerHTML = cursos.length
+        ? cursos.map((curso) => `<option value="${curso.id}">${curso.name || curso.nombre}</option>`).join("")
+        : "<option value=\"\">No hay materias</option>";
+    }
+
+    async function cargarDocentes() {
+      const usuarios = await getUsers();
+      const docentes = usuarios.filter((usuario) => usuario.role === "docente");
+      document.getElementById("docenteSeleccionado").innerHTML = docentes.length
+        ? docentes.map((docente) => `<option value="${docente.uid}">${docente.displayName || docente.email}</option>`).join("")
+        : "<option value=\"\">No hay docentes</option>";
     }
 
     document.getElementById("formulario-curso").addEventListener("submit", async (e) => {
@@ -72,9 +97,23 @@
       }
     });
 
+    document.getElementById("formulario-asignacion").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const mensaje = document.getElementById("mensaje-error");
+      mensaje.className = "mensaje-error";
+      try {
+        await assignCourseTeacher(document.getElementById("cursoSeleccionado").value, document.getElementById("docenteSeleccionado").value);
+        mensaje.className = "mensaje-exito";
+        mensaje.textContent = "Docente asignado correctamente";
+        await cargarCursos();
+      } catch (error) {
+        mensaje.textContent = error.message;
+      }
+    });
+
     if (requireRole("admin")) {
       document.getElementById("logoutButton").addEventListener("click", async () => { await signOut(auth); localStorage.removeItem("currentUser"); window.location.href = "../../index.html"; });
-      cargarCursos().catch((err) => { document.getElementById("mensaje-error").textContent = err.message; });
+      Promise.all([cargarCursos(), cargarDocentes()]).catch((err) => { document.getElementById("mensaje-error").textContent = err.message; });
     }
   </script>
 </body>
