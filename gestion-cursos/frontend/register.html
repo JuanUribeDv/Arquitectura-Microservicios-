@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestión de Cursos | Registro</title>
+    <link rel="stylesheet" href="./css/base/reset.css" />
+    <link rel="stylesheet" href="./css/base/variables.css" />
+    <link rel="stylesheet" href="./css/pages/login.css" />
+  </head>
+  <body class="login-page">
+    <main class="login-shell">
+      <section class="login-card">
+        <div class="brand-block">
+          <span class="brand-badge">GC</span>
+          <h1>Crear cuenta</h1>
+          <p>Regístrate para entrar al sistema.</p>
+        </div>
+
+        <form id="registerForm" class="login-form">
+          <label>
+            <span>Email</span>
+            <input type="email" id="registerEmail" placeholder="usuario@correo.com" required />
+          </label>
+
+          <label>
+            <span>Contraseña</span>
+            <input type="password" id="registerPassword" placeholder="••••••••" required />
+          </label>
+
+          <label>
+            <span>Rol</span>
+            <select id="registerRole">
+              <option value="estudiante">Estudiante</option>
+              <option value="docente">Docente</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </label>
+
+          <button type="submit" class="btn-primary">Registrarme</button>
+
+          <p class="form-footer">
+            Ya tienes cuenta?
+            <a href="./index.html">Iniciar sesión</a>
+          </p>
+        </form>
+      </section>
+    </main>
+
+    <script type="module" src="./js/config/firebaseConfig.js"></script>
+    <script type="module" src="./js/auth/register.js"></script>
+  </body>
+</html>
