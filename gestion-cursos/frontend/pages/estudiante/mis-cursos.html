@@ -3,7 +3,6 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mis cursos | Estudiante</title>
     <link rel="stylesheet" href="../../css/styles.css" />
     <link rel="stylesheet" href="../../css/pages/estudiante.css" />
@@ -24,7 +23,6 @@
       async function cargarCursos() {
         const [cursos, matriculas] = await Promise.all([getCourses(), getEnrollments()]);
         const enrolledIds = new Set(matriculas.map((item) => item.courseId));
-        const visibles = cursos.filter((curso) => enrolledIds.size === 0 || enrolledIds.has(curso.id));
         document.getElementById("courseList").innerHTML = cursos.length
           ? cursos.map((curso) => { const enrolled = enrolledIds.has(curso.id); return `<article class="panel"><strong>${curso.name || curso.nombre}</strong><span>${curso.description || "Curso disponible"}</span>${enrolled ? "<span>Matriculado</span>" : `<button class="enroll-button" data-course-id="${curso.id}" type="button">Matricularme</button>`}</article>`; }).join("")
           : "<p>No tienes cursos matriculados.</p>";

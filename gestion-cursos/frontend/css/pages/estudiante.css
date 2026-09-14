@@ -9,5 +9,25 @@ body {
   margin-top: 2rem;
 }
 
+.course-list .panel {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid var(--borde);
+}
+
+.course-list .panel strong {
+  color: #496a8d;
+}
+
+.course-list .panel span {
+  color: var(--texto-tenue);
+}
+
+.course-list .panel button {
+  width: fit-content;
+}
+
 .role-estudiante .etiqueta-rol { color: #496a8d; border-color: #496a8d; }
 .role-estudiante .panel-link strong { color: #496a8d; }
