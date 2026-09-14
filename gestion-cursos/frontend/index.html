@@ -7,8 +7,12 @@
     <link rel="stylesheet" href="./css/base/reset.css" />
     <link rel="stylesheet" href="./css/base/variables.css" />
     <link rel="stylesheet" href="./css/pages/login.css" />
+    <script type="importmap">
+      {"imports":{"firebase/app":"https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js","firebase/auth":"https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js","firebase/firestore":"https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js"}}
+    </script>
   </head>
   <body class="login-page">
+    <button class="boton-volver" type="button" onclick="if (history.length > 1) history.back();">Volver</button>
     <main class="login-shell">
       <section class="login-card">
         <div class="brand-block">
@@ -29,6 +33,8 @@
           </label>
 
           <button type="submit" class="btn-primary">Iniciar sesión</button>
+
+          <p class="mensaje-error" id="login-error" role="alert"></p>
 
           <p class="form-footer">
             ¿No tienes cuenta?

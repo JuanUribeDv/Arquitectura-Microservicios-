@@ -4,70 +4,30 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard Estudiante</title>
+    <link rel="stylesheet" href="../../css/styles.css" />
+    <link rel="stylesheet" href="../../css/pages/estudiante.css" />
+    <script type="importmap">
+      {"imports":{"firebase/app":"https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js","firebase/auth":"https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js","firebase/firestore":"https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js"}}
+    </script>
   </head>
-  <body>
-    <h1>Dashboard Estudiante</h1>
-    <p id="userInfo">Cargando usuario...</p>
-    <button id="logoutBtn">Cerrar sesión</button>
-
-    <section>
-      <h2>Mis cursos</h2>
-      <ul id="studentCourseList"></ul>
-    </section>
-
-    <section>
-      <h2>Mis calificaciones</h2>
-      <ul id="gradeList"></ul>
-    </section>
-
+  <body class="role-estudiante">
+    <button class="boton-volver" type="button" onclick="if (history.length > 1) history.back();">Volver</button>
+    <header class="encabezado">
+      <h1>Panel del estudiante <span class="etiqueta-rol">estudiante</span></h1>
+      <button class="salir" id="logoutButton" type="button" onclick="localStorage.removeItem('currentUser'); window.location.href='/index.html';">Cerrar sesión</button>
+    </header>
+    <main>
+      <p>Consulta tus cursos y revisa tus calificaciones.</p>
+      <div class="dashboard-grid">
+        <a class="panel-link" href="mis-cursos.html"><strong>Mis cursos</strong><span>Ver cursos matriculados</span></a>
+        <a class="panel-link" href="curso-detalle.html"><strong>Mis calificaciones</strong><span>Consultar resultados</span></a>
+      </div>
+    </main>
     <script type="module">
-      import { signOut, onAuthStateChanged } from "firebase/auth";
+      import { signOut } from "firebase/auth";
       import { auth } from "../../js/config/firebaseConfig.js";
-
-      const getCourses = () => JSON.parse(localStorage.getItem("gc_courses") || "[]");
-      const getGrades = () => JSON.parse(localStorage.getItem("gc_grades") || "[]");
-
-      const renderStudentCourses = (email) => {
-        const courses = getCourses();
-        const list = document.getElementById("studentCourseList");
-        list.innerHTML = courses.length
-          ? courses.map((course) => `<li>${course.nombre} - ${course.docente}</li>`).join("")
-          : "<li>No tienes cursos asignados.</li>";
-      };
-
-      const renderGrades = (email) => {
-        const grades = getGrades().filter((grade) => grade.studentEmail === email);
-        const list = document.getElementById("gradeList");
-        list.innerHTML = grades.length
-          ? grades.map((grade) => `<li>Curso ${grade.courseId} - Nota: ${grade.nota}</li>`).join("")
-          : "<li>Aún no tienes calificaciones.</li>";
-      };
-
-      onAuthStateChanged(auth, (user) => {
-        if (!user) {
-          window.location.href = "../../index.html";
-          return;
-        }
-
-        const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
-        const role = currentUser?.role || "estudiante";
-
-        if (role !== "estudiante") {
-          window.location.href = "../" + role + "/dashboard.html";
-          return;
-        }
-
-        const email = user.email || currentUser?.email || "estudiante@institucion.com";
-        document.getElementById("userInfo").textContent = `Sesión activa: ${email}`;
-        renderStudentCourses(email);
-        renderGrades(email);
-      });
-
-      document.getElementById("logoutBtn").addEventListener("click", async () => {
-        await signOut(auth);
-        localStorage.removeItem("currentUser");
-        window.location.href = "../../index.html";
-      });
+      import { requireRole } from "../../js/auth/authGuard.js";
+      if (requireRole("estudiante")) document.getElementById("logoutButton").addEventListener("click", async () => { await signOut(auth); localStorage.removeItem("currentUser"); window.location.href = "../../index.html"; });
     </script>
   </body>
 </html>

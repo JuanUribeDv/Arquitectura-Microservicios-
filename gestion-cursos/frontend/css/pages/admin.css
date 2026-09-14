@@ -1,6 +1,5 @@
 body {
-  background: var(--color-bg);
-  padding: 2rem;
+  background: #f4f7fb;
 }
 
 .dashboard-grid {
@@ -9,3 +8,6 @@ body {
   gap: 1rem;
   margin-top: 2rem;
 }
+
+.role-admin .etiqueta-rol { color: #9a5b13; border-color: #c98a43; }
+.role-admin .panel-link strong { color: var(--azul-pizarra); }

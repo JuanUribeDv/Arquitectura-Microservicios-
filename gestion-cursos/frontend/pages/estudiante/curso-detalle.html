@@ -4,8 +4,42 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Detalle del Curso</title>
+    <link rel="stylesheet" href="../../css/styles.css" />
+    <link rel="stylesheet" href="../../css/pages/estudiante.css" />
+    <script type="importmap">
+      {"imports":{"firebase/app":"https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js","firebase/auth":"https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js","firebase/firestore":"https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js"}}
+    </script>
   </head>
-  <body>
-    <h1>Detalle del Curso</h1>
+  <body class="role-estudiante">
+    <button class="boton-volver" type="button" onclick="if (history.length > 1) history.back();">Volver</button>
+    <header class="encabezado">
+      <h1>Mis calificaciones <span class="etiqueta-rol">estudiante</span></h1>
+      <button class="salir" id="logoutButton" type="button" onclick="localStorage.removeItem('currentUser'); window.location.href='/index.html';">Cerrar sesión</button>
+    </header>
+    <main>
+      <table>
+        <thead><tr><th>Curso</th><th>Calificación</th></tr></thead>
+        <tbody id="cuerpo-tabla-calificaciones"><tr><td colspan="2">Cargando...</td></tr></tbody>
+      </table>
+      <p class="mensaje-error" id="mensaje-error"></p>
+    </main>
+    <script type="module">
+      import { signOut } from "firebase/auth";
+      import { auth } from "../../js/config/firebaseConfig.js";
+      import { requireRole } from "../../js/auth/authGuard.js";
+      import { getMyGrades } from "../../js/services/enrollmentsApi.js";
+      async function cargarCalificaciones() {
+        const registros = await getMyGrades();
+        const cuerpo = document.getElementById("cuerpo-tabla-calificaciones");
+        cuerpo.innerHTML = registros.length
+          ? registros.map((registro) => `<tr><td>${registro.courseId || registro.cursoId}</td><td>${registro.grade ?? registro.calificacion}</td></tr>`).join("")
+          : "<tr><td colspan=\"2\">Aún no tienes calificaciones registradas</td></tr>";
+      }
+
+      if (requireRole("estudiante")) {
+        document.getElementById("logoutButton").addEventListener("click", async () => { await signOut(auth); localStorage.removeItem("currentUser"); window.location.href = "../../index.html"; });
+        cargarCalificaciones().catch((err) => { document.getElementById("mensaje-error").textContent = err.message; });
+      }
+    </script>
   </body>
 </html>

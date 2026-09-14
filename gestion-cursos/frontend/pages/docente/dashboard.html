@@ -4,120 +4,30 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard Docente</title>
+    <link rel="stylesheet" href="../../css/styles.css" />
+    <link rel="stylesheet" href="../../css/pages/docente.css" />
+    <script type="importmap">
+      {"imports":{"firebase/app":"https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js","firebase/auth":"https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js","firebase/firestore":"https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js"}}
+    </script>
   </head>
-  <body>
-    <h1>Dashboard Docente</h1>
-    <p id="userInfo">Cargando usuario...</p>
-    <button id="logoutBtn">Cerrar sesión</button>
-
-    <section>
-      <h2>Mis cursos</h2>
-      <ul id="teacherCourseList"></ul>
-    </section>
-
-    <section>
-      <h2>Registrar calificación</h2>
-      <form id="gradeForm">
-        <select id="courseSelect" required></select>
-        <select id="studentSelect" required></select>
-        <input id="gradeValue" type="number" min="0" max="10" step="0.1" placeholder="Nota 0-10" required />
-        <button type="submit">Guardar calificación</button>
-      </form>
-      <ul id="gradeList"></ul>
-    </section>
-
-    <section>
-      <h2>Estudiantes del sistema</h2>
-      <ul id="studentList"></ul>
-    </section>
-
+  <body class="role-docente">
+    <button class="boton-volver" type="button" onclick="if (history.length > 1) history.back();">Volver</button>
+    <header class="encabezado">
+      <h1>Panel del docente <span class="etiqueta-rol">docente</span></h1>
+      <button class="salir" id="logoutButton" type="button" onclick="localStorage.removeItem('currentUser'); window.location.href='/index.html';">Cerrar sesión</button>
+    </header>
+    <main>
+      <p>Consulta tus cursos y registra las calificaciones de tus estudiantes.</p>
+      <div class="dashboard-grid">
+        <a class="panel-link" href="mis-cursos.html"><strong>Mis cursos</strong><span>Revisar cursos asignados</span></a>
+        <a class="panel-link" href="calificar.html"><strong>Registrar calificaciones</strong><span>Guardar una calificación</span></a>
+      </div>
+    </main>
     <script type="module">
-      import { signOut, onAuthStateChanged } from "firebase/auth";
+      import { signOut } from "firebase/auth";
       import { auth } from "../../js/config/firebaseConfig.js";
-
-      const getUsers = () => JSON.parse(localStorage.getItem("gc_users") || "[]");
-      const getCourses = () => JSON.parse(localStorage.getItem("gc_courses") || "[]");
-      const getGrades = () => JSON.parse(localStorage.getItem("gc_grades") || "[]");
-
-      const renderTeacherCourses = (email) => {
-        const courses = getCourses().filter((course) => course.docente === email);
-        const list = document.getElementById("teacherCourseList");
-        list.innerHTML = courses.length
-          ? courses.map((course) => `<li>${course.nombre}</li>`).join("")
-          : "<li>No tienes cursos asignados.</li>";
-
-        const courseSelect = document.getElementById("courseSelect");
-        courseSelect.innerHTML = courses.length
-          ? courses.map((course) => `<option value="${course.id}">${course.nombre}</option>`).join("")
-          : "<option value=''>Sin cursos</option>";
-      };
-
-      const renderStudentOptions = () => {
-        const students = getUsers().filter((user) => user.role === "estudiante");
-        const studentSelect = document.getElementById("studentSelect");
-        studentSelect.innerHTML = students.length
-          ? students.map((student) => `<option value="${student.email}">${student.name} - ${student.email}</option>`).join("")
-          : "<option value=''>Sin estudiantes</option>";
-      };
-
-      const renderGrades = (email) => {
-        const grades = getGrades().filter((grade) => grade.studentEmail === email || getCourses().some((course) => Number(course.id) === Number(grade.courseId) && course.docente === email));
-        const list = document.getElementById("gradeList");
-        list.innerHTML = grades.length
-          ? grades.map((grade) => `<li>Estudiante: ${grade.studentEmail} - Curso: ${Number(grade.courseId)} - Nota: ${grade.nota}</li>`).join("")
-          : "<li>No hay calificaciones registradas.</li>";
-      };
-
-      const renderStudents = () => {
-        const students = getUsers().filter((user) => user.role === "estudiante");
-        const list = document.getElementById("studentList");
-        list.innerHTML = students.length
-          ? students.map((student) => `<li>${student.name} - ${student.email}</li>`).join("")
-          : "<li>No hay estudiantes.</li>";
-      };
-
-      onAuthStateChanged(auth, (user) => {
-        if (!user) {
-          window.location.href = "../../index.html";
-          return;
-        }
-
-        const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
-        const role = currentUser?.role || "docente";
-
-        if (role !== "docente") {
-          window.location.href = "../" + role + "/dashboard.html";
-          return;
-        }
-
-        document.getElementById("userInfo").textContent = `Sesión activa: ${user.email || currentUser?.email || "usuario@correo.com"}`;
-        renderTeacherCourses(user.email || currentUser?.email || "docente@institucion.com");
-        renderStudentOptions();
-        renderStudents();
-        renderGrades(user.email || currentUser?.email || "docente@institucion.com");
-      });
-
-      document.getElementById("gradeForm").addEventListener("submit", (event) => {
-        event.preventDefault();
-        const courseId = document.getElementById("courseSelect").value;
-        const studentEmail = document.getElementById("studentSelect").value;
-        const nota = Number(document.getElementById("gradeValue").value);
-
-        if (!courseId || !studentEmail || !nota) return;
-
-        const grades = getGrades();
-        grades.push({ studentEmail, courseId: Number(courseId), nota });
-        localStorage.setItem("gc_grades", JSON.stringify(grades));
-
-        document.getElementById("gradeForm").reset();
-        renderGrades(document.getElementById("userInfo").textContent.replace("Sesión activa: ", ""));
-      });
-
-      document.getElementById("logoutBtn").addEventListener("click", async () => {
-        await signOut(auth);
-        localStorage.removeItem("currentUser");
-        window.location.href = "../../index.html";
-      });
+      import { requireRole } from "../../js/auth/authGuard.js";
+      if (requireRole("docente")) document.getElementById("logoutButton").addEventListener("click", async () => { await signOut(auth); localStorage.removeItem("currentUser"); window.location.href = "../../index.html"; });
     </script>
   </body>
 </html>

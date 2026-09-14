@@ -1,3 +1,5 @@
+import { apiRequest } from "./apiClient.js";
+
 async function getCourses() {
   return apiRequest("/courses");
 }
@@ -8,3 +10,5 @@ async function createCourse(courseData) {
     body: JSON.stringify(courseData),
   });
 }
+
+export { getCourses, createCourse };

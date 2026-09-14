@@ -1,11 +1,75 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Calificaciones</title>
-  </head>
-  <body>
-    <h1>Calificar Estudiantes</h1>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registrar calificaciones</title>
+  <link rel="stylesheet" href="../../css/styles.css" />
+  <link rel="stylesheet" href="../../css/pages/docente.css" />
+  <script type="importmap">
+    {"imports":{"firebase/app":"https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js","firebase/auth":"https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js","firebase/firestore":"https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js"}}
+  </script>
+</head>
+<body class="role-docente">
+  <button class="boton-volver" type="button" onclick="if (history.length > 1) history.back();">Volver</button>
+  <div class="encabezado">
+    <h1>Registrar calificaciones <span class="etiqueta-rol">docente</span></h1>
+    <button class="salir" id="logoutButton" type="button" onclick="localStorage.removeItem('currentUser'); window.location.href='/index.html';">Cerrar sesión</button>
+  </div>
+  <main>
+    <form class="formulario-inline" id="formulario-calificacion">
+      <div>
+        <label for="estudianteUid">Estudiante</label>
+        <select id="estudianteUid" required><option value="">Cargando estudiantes...</option></select>
+      </div>
+      <div>
+        <label for="cursoId">Curso</label>
+        <select id="cursoId" required><option value="">Cargando cursos...</option></select>
+      </div>
+      <div>
+        <label for="calificacion">Calificación</label>
+        <input type="number" id="calificacion" min="0" max="5" step="0.1" required />
+      </div>
+      <button type="submit">Guardar</button>
+    </form>
+    <p class="mensaje-error" id="mensaje-error"></p>
+  </main>
+
+    <script type="module">
+      import { signOut } from "firebase/auth";
+      import { auth } from "../../js/config/firebaseConfig.js";
+      import { requireRole } from "../../js/auth/authGuard.js";
+      import { recordGrade } from "../../js/services/enrollmentsApi.js";
+      import { getStudents } from "../../js/services/usersApi.js";
+      import { getCourses } from "../../js/services/coursesApi.js";
+      async function cargarOpciones() {
+        const [students, courses] = await Promise.all([getStudents(), getCourses()]);
+        document.getElementById("estudianteUid").innerHTML = students.map((student) => `<option value="${student.uid}">${student.displayName || student.email}</option>`).join("") || "<option value=\"\">Sin estudiantes</option>";
+        document.getElementById("cursoId").innerHTML = courses.map((course) => `<option value="${course.id}">${course.name || course.nombre}</option>`).join("") || "<option value=\"\">Sin cursos</option>";
+      }
+    document.getElementById("formulario-calificacion").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const mensajeError = document.getElementById("mensaje-error");
+      mensajeError.textContent = "";
+      try {
+        await recordGrade({
+            estudianteUid: document.getElementById("estudianteUid").value,
+            cursoId: document.getElementById("cursoId").value,
+            calificacion: Number(document.getElementById("calificacion").value),
+        });
+        e.target.reset();
+        mensajeError.className = "mensaje-exito";
+        mensajeError.textContent = "Calificación registrada";
+      } catch (err) {
+        mensajeError.className = "mensaje-error";
+        mensajeError.textContent = err.message;
+      }
+    });
+  </script>
+    if (requireRole("docente")) {
+      document.getElementById("logoutButton").addEventListener("click", async () => { await signOut(auth); localStorage.removeItem("currentUser"); window.location.href = "../../index.html"; });
+      cargarOpciones().catch((error) => { document.getElementById("mensaje-error").textContent = error.message; });
+    }
+  </script>
+</body>
 </html>

@@ -7,14 +7,18 @@
     <link rel="stylesheet" href="./css/base/reset.css" />
     <link rel="stylesheet" href="./css/base/variables.css" />
     <link rel="stylesheet" href="./css/pages/login.css" />
+    <script type="importmap">
+      {"imports":{"firebase/app":"https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js","firebase/auth":"https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js","firebase/firestore":"https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js"}}
+    </script>
   </head>
   <body class="login-page">
+    <button class="boton-volver" type="button" onclick="if (history.length > 1) history.back();">Volver</button>
     <main class="login-shell">
       <section class="login-card">
         <div class="brand-block">
           <span class="brand-badge">GC</span>
           <h1>Crear cuenta</h1>
-          <p>Regístrate para entrar al sistema.</p>
+          <p>El registro público crea cuentas de estudiante. Docentes y administradores los registra un administrador.</p>
         </div>
 
         <form id="registerForm" class="login-form">
@@ -29,7 +33,7 @@
           </label>
 
           <label>
-            <span>Rol</span>
+            <span>Rol de prueba</span>
             <select id="registerRole">
               <option value="estudiante">Estudiante</option>
               <option value="docente">Docente</option>
@@ -38,6 +42,8 @@
           </label>
 
           <button type="submit" class="btn-primary">Registrarme</button>
+
+          <p class="mensaje-error" id="register-error" role="alert"></p>
 
           <p class="form-footer">
             Ya tienes cuenta?

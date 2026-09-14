@@ -1,9 +1,3 @@
-/**
- * Este es un ejemplo de configuración de Firebase.
- * Copia el contenido a firebaseConfig.js y rellena con tus valores reales.
- * Ese archivo real queda ignorado por Git por seguridad.
- */
-
 const firebaseConfig = {
   apiKey: "TU_API_KEY",
   authDomain: "TU_AUTH_DOMAIN",

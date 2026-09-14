@@ -1,10 +1,10 @@
-import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../config/firebaseConfig.js";
 
 const routes = {
-  admin: "./pages/admin/dashboard.html",
-  docente: "./pages/docente/dashboard.html",
-  estudiante: "./pages/estudiante/dashboard.html",
+  admin: "/pages/admin/dashboard.html",
+  docente: "/pages/docente/dashboard.html",
+  estudiante: "/pages/estudiante/dashboard.html",
 };
 
 const redirectToRoleDashboard = (role = "estudiante") => {
@@ -16,20 +16,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("loginForm");
   const emailInput = document.getElementById("email");
   const passwordInput = document.getElementById("password");
+  const errorMessage = document.getElementById("login-error");
 
   if (!loginForm || !emailInput || !passwordInput) return;
-
-  const restoreRoleFromLocalStorage = () => {
-    const savedUser = JSON.parse(localStorage.getItem("currentUser") || "null");
-    return savedUser?.role || "estudiante";
-  };
-
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      const role = restoreRoleFromLocalStorage();
-      redirectToRoleDashboard(role);
-    }
-  });
 
   loginForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -38,16 +27,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const password = passwordInput.value.trim();
 
     if (!email || !password) {
-      alert("Completa email y contraseña");
+      errorMessage.textContent = "Completa email y contraseña";
       return;
     }
 
     try {
       const { user } = await signInWithEmailAndPassword(auth, email, password);
 
-      const users = JSON.parse(localStorage.getItem("gc_users") || "[]");
-      const profile = users.find((item) => item.email && item.email.toLowerCase() === user.email.toLowerCase());
-      const role = profile?.role || "estudiante";
+      const token = await user.getIdToken();
+      const profileResponse = await fetch("http://localhost:3000/api/users/me", { headers: { Authorization: `Bearer ${token}` } });
+      if (!profileResponse.ok) {
+        const detail = await profileResponse.text();
+        throw new Error(`El usuario autenticó, pero el perfil respondió HTTP ${profileResponse.status}: ${detail}`);
+      }
+      const profile = await profileResponse.json();
+      const role = profile.role;
+      if (!["admin", "docente", "estudiante"].includes(role)) throw new Error("Rol inválido");
 
       localStorage.setItem(
         "currentUser",
@@ -58,10 +53,16 @@ document.addEventListener("DOMContentLoaded", () => {
       redirectToRoleDashboard(role);
     } catch (error) {
       console.error(error);
-      if (error.code === "auth/invalid-credential") {
-        alert("Usuario no registrado en Firebase Authentication");
+      if (error.code === "auth/invalid-credential" || error.code === "auth/invalid-login-credentials") {
+        errorMessage.textContent = "Firebase rechazó el correo o la contraseña. Verifica que Email/Password esté habilitado y que el usuario exista en Authentication.";
+      } else if (error.code === "auth/user-not-found") {
+        errorMessage.textContent = "El correo no existe en Firebase Authentication.";
+      } else if (error.code === "auth/wrong-password") {
+        errorMessage.textContent = "La contraseña no coincide con la registrada en Firebase.";
+      } else if (error.message.includes("perfil respondió")) {
+        errorMessage.textContent = error.message;
       } else {
-        alert("Credenciales incorrectas o usuario no existe");
+        errorMessage.textContent = `No se pudo iniciar sesión: ${error.message}`;
       }
     }
   });
