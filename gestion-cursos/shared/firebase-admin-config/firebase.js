@@ -1,22 +1,21 @@
-/**
- * firebase.js
- * -----------
- * Archivo para configurar Firebase Admin SDK.
- *
- * Funciones esperadas:
- * - Inicializar Firebase Admin
- * - Verificar tokens de autenticación
- * - Generar credenciales desde variables de entorno
- */
+// shared/firebase-admin-config/firebase.js
+import admin from "firebase-admin";
+import { readFileSync } from "fs";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 
-// Ejemplo base:
-// const admin = require('firebase-admin');
-// const serviceAccount = require('./firebase-service-account.json');
-//
-// admin.initializeApp({
-//   credential: admin.credential.cert(serviceAccount)
-// });
-//
-// module.exports = admin;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-console.log('Configuración de Firebase Admin preparada');
+const serviceAccount = JSON.parse(
+  readFileSync(join(__dirname, "serviceAccountKey.json"), "utf8")
+);
+
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+}
+
+export const db = admin.firestore();
+export default admin;

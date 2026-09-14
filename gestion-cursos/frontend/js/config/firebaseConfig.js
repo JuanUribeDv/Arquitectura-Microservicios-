@@ -1,11 +1,17 @@
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_AUTH_DOMAIN",
-  projectId: "TU_PROJECT_ID",
-  storageBucket: "TU_STORAGE_BUCKET",
-  messagingSenderId: "TU_MESSAGING_SENDER_ID",
-  appId: "TU_APP_ID",
+  apiKey: "AIzaSyAvPykRpJu8l-8K26wLIaRzJhIIqvGpH_M",
+  authDomain: "arq-microservicios-f5474.firebaseapp.com",
+  projectId: "arq-microservicios-f5474",
+  storageBucket: "arq-microservicios-f5474.firebasestorage.app",
+  messagingSenderId: "828045790640",
+  appId: "1:828045790640:web:aca1b28e8b01663ff29a75",
 };
 
-// Aquí se puede inicializar Firebase si se desea usar autenticación real.
-console.log("Firebase config cargada");
+const app = initializeApp(firebaseConfig);
+
+export const auth = getAuth(app);
+export const db = getFirestore(app);
