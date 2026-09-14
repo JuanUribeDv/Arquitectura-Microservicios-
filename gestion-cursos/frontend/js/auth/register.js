@@ -1,45 +1,42 @@
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../config/firebaseConfig.js";
 
-const loginPage = "./index.html";
+const loginPage = "/index.html";
 
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("registerForm");
   const emailInput = document.getElementById("registerEmail");
   const passwordInput = document.getElementById("registerPassword");
   const roleSelect = document.getElementById("registerRole");
+  const errorMessage = document.getElementById("register-error");
 
-  if (!form || !emailInput || !passwordInput || !roleSelect) return;
+  if (!form || !emailInput || !passwordInput) return;
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     const email = emailInput.value.trim();
     const password = passwordInput.value.trim();
-    const role = roleSelect.value || "estudiante";
-
+    const role = roleSelect?.value || "estudiante";
     if (!email || !password) {
-      alert("Completa todos los campos");
+      errorMessage.textContent = "Completa todos los campos";
       return;
     }
 
     try {
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
-
-      const users = JSON.parse(localStorage.getItem("gc_users") || "[]");
-      const exists = users.some((item) => item.email && item.email.toLowerCase() === email.toLowerCase());
-
-      if (!exists) {
-        users.push({
-          uid: user.uid,
-          email: user.email,
-          role,
-          name: email.split("@")[0],
-        });
+      const token = await user.getIdToken();
+      const response = await fetch("http://localhost:3000/api/users/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ displayName: email.split("@")[0], role }),
+      });
+      if (!response.ok) {
+        const responseText = await response.text();
+        throw new Error(`El usuario se creó en Authentication, pero el perfil devolvió HTTP ${response.status}: ${responseText}`);
       }
-
-      localStorage.setItem("gc_users", JSON.stringify(users));
-      localStorage.setItem("currentUser", JSON.stringify({ uid: user.uid, email: user.email, role }));
+      const profile = await response.json();
+      localStorage.setItem("currentUser", JSON.stringify(profile));
 
       form.reset();
       alert("Cuenta creada correctamente. Ahora inicia sesión.");
@@ -47,11 +44,11 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       console.error(error);
       if (error.code === "auth/email-already-in-use") {
-        alert("Ese correo ya está registrado en Firebase Authentication");
+        errorMessage.textContent = "Ese correo ya está registrado en Firebase Authentication";
       } else if (error.code === "auth/weak-password") {
-        alert("La contraseña debe tener al menos 6 caracteres");
+        errorMessage.textContent = "La contraseña debe tener al menos 6 caracteres";
       } else {
-        alert("No se pudo crear la cuenta en Firebase");
+        errorMessage.textContent = error.message || "No se pudo crear la cuenta en Firebase";
       }
     }
   });

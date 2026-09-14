@@ -3,9 +3,38 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mis Cursos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mis cursos | Estudiante</title>
+    <link rel="stylesheet" href="../../css/styles.css" />
+    <link rel="stylesheet" href="../../css/pages/estudiante.css" />
+    <script type="importmap">
+      {"imports":{"firebase/app":"https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js","firebase/auth":"https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js","firebase/firestore":"https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js"}}
+    </script>
   </head>
-  <body>
-    <h1>Mis Cursos</h1>
+  <body class="role-estudiante">
+    <button class="boton-volver" type="button" onclick="if (history.length > 1) history.back();">Volver</button>
+    <header class="encabezado"><h1>Mis cursos <span class="etiqueta-rol">estudiante</span></h1><button class="salir" id="logoutButton" type="button" onclick="localStorage.removeItem('currentUser'); window.location.href='/index.html';">Cerrar sesión</button></header>
+    <main><div class="course-list" id="courseList"><p>Cargando cursos...</p></div><p class="mensaje-error" id="mensaje-error"></p></main>
+    <script type="module">
+      import { signOut } from "firebase/auth";
+      import { auth } from "../../js/config/firebaseConfig.js";
+      import { requireRole } from "../../js/auth/authGuard.js";
+      import { getEnrollments, enrollStudent } from "../../js/services/enrollmentsApi.js";
+      import { getCourses } from "../../js/services/coursesApi.js";
+      async function cargarCursos() {
+        const [cursos, matriculas] = await Promise.all([getCourses(), getEnrollments()]);
+        const enrolledIds = new Set(matriculas.map((item) => item.courseId));
+        const visibles = cursos.filter((curso) => enrolledIds.size === 0 || enrolledIds.has(curso.id));
+        document.getElementById("courseList").innerHTML = cursos.length
+          ? cursos.map((curso) => { const enrolled = enrolledIds.has(curso.id); return `<article class="panel"><strong>${curso.name || curso.nombre}</strong><span>${curso.description || "Curso disponible"}</span>${enrolled ? "<span>Matriculado</span>" : `<button class="enroll-button" data-course-id="${curso.id}" type="button">Matricularme</button>`}</article>`; }).join("")
+          : "<p>No tienes cursos matriculados.</p>";
+        document.querySelectorAll(".enroll-button").forEach((button) => button.addEventListener("click", async () => {
+          button.disabled = true;
+          try { await enrollStudent({ courseId: button.dataset.courseId }); await cargarCursos(); }
+          catch (error) { document.getElementById("mensaje-error").textContent = error.message; button.disabled = false; }
+        }));
+      }
+      if (requireRole("estudiante")) { document.getElementById("logoutButton").addEventListener("click", async () => { await signOut(auth); localStorage.removeItem("currentUser"); window.location.href = "../../index.html"; }); cargarCursos().catch((err) => { document.getElementById("mensaje-error").textContent = err.message; }); }
+    </script>
   </body>
 </html>

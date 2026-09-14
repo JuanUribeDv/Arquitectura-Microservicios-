@@ -1,150 +1,34 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard Administrador</title>
-  </head>
-  <body>
-    <h1>Dashboard Administrador</h1>
-    <p id="userInfo">Cargando usuario...</p>
-    <button id="logoutBtn">Cerrar sesión</button>
+<head>
+  <meta charset="UTF-8" />
+  <title>Panel del administrador</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="../../css/styles.css" />
+  <link rel="stylesheet" href="../../css/pages/admin.css" />
+  <script type="importmap">
+    {"imports":{"firebase/app":"https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js","firebase/auth":"https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js","firebase/firestore":"https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js"}}
+  </script>
+</head>
+<body class="role-admin">
+  <button class="boton-volver" type="button" onclick="if (history.length > 1) history.back();">Volver</button>
+  <div class="encabezado">
+    <h1>Panel del administrador <span class="etiqueta-rol">administrador</span></h1>
+    <button class="salir" id="logoutButton" type="button" onclick="localStorage.removeItem('currentUser'); window.location.href='/index.html';">Cerrar sesión</button>
+  </div>
+  <main>
+    <p>Administra la oferta académica y consulta los cursos registrados.</p>
+    <div class="dashboard-grid">
+      <a class="panel-link" href="cursos.html"><strong>Gestión de cursos</strong><span>Crear y consultar cursos</span></a>
+      <a class="panel-link" href="usuarios.html"><strong>Usuarios</strong><span>Consultar usuarios del sistema</span></a>
+    </div>
+  </main>
 
-    <section>
-      <h2>Registrar estudiante</h2>
-      <form id="studentForm">
-        <input id="studentName" type="text" placeholder="Nombre del estudiante" required />
-        <input id="studentEmail" type="email" placeholder="correo@institucion.com" required />
-        <button type="submit">Guardar estudiante</button>
-      </form>
-    </section>
-
-    <section>
-      <h2>Crear curso</h2>
-      <form id="courseForm">
-        <input id="courseName" type="text" placeholder="Nombre del curso" required />
-        <input id="courseTeacher" type="email" placeholder="Correo del docente" required />
-        <button type="submit">Crear curso</button>
-      </form>
-    </section>
-
-    <section>
-      <h2>Estudiantes registrados</h2>
-      <ul id="studentList"></ul>
-    </section>
-
-    <section>
-      <h2>Cursos del sistema</h2>
-      <ul id="courseList"></ul>
-    </section>
-
-    <script type="module">
-      import { signOut, onAuthStateChanged } from "firebase/auth";
-      import { auth } from "../../js/config/firebaseConfig.js";
-
-      const ensureSeedData = () => {
-        if (!localStorage.getItem("gc_courses")) {
-          localStorage.setItem("gc_courses", JSON.stringify([
-            { id: 1, nombre: "Microservicios", docente: "docente@institucion.com" },
-            { id: 2, nombre: "Bases de Datos", docente: "docente@institucion.com" }
-          ]));
-        }
-
-        if (!localStorage.getItem("gc_users")) {
-          localStorage.setItem("gc_users", JSON.stringify([
-            { uid: "admin-seed", email: "admin@institucion.com", role: "admin", name: "Administrador" },
-            { uid: "docente-seed", email: "docente@institucion.com", role: "docente", name: "Docente" },
-            { uid: "estudiante-seed", email: "estudiante@institucion.com", role: "estudiante", name: "Estudiante" }
-          ]));
-        }
-
-        if (!localStorage.getItem("gc_grades")) {
-          localStorage.setItem("gc_grades", JSON.stringify([
-            { studentEmail: "estudiante@institucion.com", courseId: 1, nota: 9.5 }
-          ]));
-        }
-      };
-
-      const getUsers = () => JSON.parse(localStorage.getItem("gc_users") || "[]");
-      const getCourses = () => JSON.parse(localStorage.getItem("gc_courses") || "[]");
-
-      const renderStudents = () => {
-        const students = getUsers().filter((user) => user.role === "estudiante");
-        const list = document.getElementById("studentList");
-        list.innerHTML = students.length
-          ? students.map((student) => `<li>${student.name} - ${student.email}</li>`).join("")
-          : "<li>No hay estudiantes registrados.</li>";
-      };
-
-      const renderCourses = () => {
-        const courses = getCourses();
-        const list = document.getElementById("courseList");
-        list.innerHTML = courses.length
-          ? courses.map((course) => `<li>${course.nombre} - Docente: ${course.docente}</li>`).join("")
-          : "<li>No hay cursos creados.</li>";
-      };
-
-      onAuthStateChanged(auth, (user) => {
-        if (!user) {
-          window.location.href = "../../index.html";
-          return;
-        }
-
-        const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
-        const role = currentUser?.role || "admin";
-
-        if (role !== "admin") {
-          window.location.href = "../" + role + "/dashboard.html";
-          return;
-        }
-
-        document.getElementById("userInfo").textContent = `Sesión activa: ${user.email || currentUser?.email || "usuario@correo.com"}`;
-        ensureSeedData();
-        renderStudents();
-        renderCourses();
-      });
-
-      document.getElementById("studentForm").addEventListener("submit", (event) => {
-        event.preventDefault();
-        const name = document.getElementById("studentName").value.trim();
-        const email = document.getElementById("studentEmail").value.trim();
-
-        if (!name || !email) return;
-
-        const users = getUsers();
-        if (!users.some((item) => item.email.toLowerCase() === email.toLowerCase())) {
-          users.push({ uid: crypto.randomUUID(), email, role: "estudiante", name });
-          localStorage.setItem("gc_users", JSON.stringify(users));
-        }
-
-        document.getElementById("studentForm").reset();
-        renderStudents();
-      });
-
-      document.getElementById("courseForm").addEventListener("submit", (event) => {
-        event.preventDefault();
-        const nombre = document.getElementById("courseName").value.trim();
-        const docente = document.getElementById("courseTeacher").value.trim();
-
-        if (!nombre || !docente) return;
-
-        const courses = getCourses();
-        courses.push({
-          id: Date.now(),
-          nombre,
-          docente,
-        });
-
-        localStorage.setItem("gc_courses", JSON.stringify(courses));
-        document.getElementById("courseForm").reset();
-        renderCourses();
-      });
-
-      document.getElementById("logoutBtn").addEventListener("click", async () => {
-        await signOut(auth);
-        localStorage.removeItem("currentUser");
-        window.location.href = "../../index.html";
-      });
-    </script>
-  </body>
+  <script type="module">
+    import { signOut } from "firebase/auth";
+    import { auth } from "../../js/config/firebaseConfig.js";
+    import { requireRole } from "../../js/auth/authGuard.js";
+    if (requireRole("admin")) document.getElementById("logoutButton").addEventListener("click", async () => { await signOut(auth); localStorage.removeItem("currentUser"); window.location.href = "../../index.html"; });
+  </script>
+</body>
 </html>

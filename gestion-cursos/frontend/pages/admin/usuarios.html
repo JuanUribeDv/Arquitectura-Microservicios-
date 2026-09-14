@@ -3,9 +3,56 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Usuarios</title>
+    <title>Usuarios | Administrador</title>
+    <link rel="stylesheet" href="../../css/styles.css" />
+    <link rel="stylesheet" href="../../css/pages/admin.css" />
+    <script type="importmap">
+      {"imports":{"firebase/app":"https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js","firebase/auth":"https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js","firebase/firestore":"https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js"}}
+    </script>
   </head>
-  <body>
-    <h1>Gestión de Usuarios</h1>
+  <body class="role-admin">
+    <button class="boton-volver" type="button" onclick="if (history.length > 1) history.back();">Volver</button>
+    <header class="encabezado"><h1>Gestión de usuarios <span class="etiqueta-rol">administrador</span></h1><button class="salir" id="logoutButton" type="button" onclick="localStorage.removeItem('currentUser'); window.location.href='/index.html';">Cerrar sesión</button></header>
+    <main>
+      <form class="formulario-inline" id="formulario-usuario">
+        <div><label for="email">Correo</label><input type="email" id="email" required /></div>
+        <div><label for="password">Contraseña temporal</label><input type="password" id="password" minlength="6" required /></div>
+        <div><label for="role">Rol</label><select id="role"><option value="estudiante">Estudiante</option><option value="docente">Docente</option><option value="admin">Administrador</option></select></div>
+        <button type="submit">Crear usuario</button>
+      </form>
+      <p class="mensaje-error" id="mensaje-error"></p>
+      <p>Los usuarios con rol docente o administrador deben crearse desde este panel.</p>
+      <table><thead><tr><th>Email</th><th>Rol</th></tr></thead><tbody id="cuerpo-tabla-usuarios"><tr><td colspan="2">Cargando...</td></tr></tbody></table>
+    </main>
+    <script type="module">
+      import { signOut } from "firebase/auth";
+      import { auth } from "../../js/config/firebaseConfig.js";
+      import { requireRole } from "../../js/auth/authGuard.js";
+      import { getUsers, createUser } from "../../js/services/usersApi.js";
+      async function cargarUsuarios() {
+        document.getElementById("cuerpo-tabla-usuarios").innerHTML = "<tr><td colspan=\"2\">Consultando Firestore...</td></tr>";
+        const usuarios = await getUsers();
+        document.getElementById("cuerpo-tabla-usuarios").innerHTML = usuarios.length
+          ? usuarios.map((usuario) => `<tr><td>${usuario.email}</td><td>${usuario.role}</td></tr>`).join("")
+          : "<tr><td colspan=\"2\">No hay usuarios registrados</td></tr>";
+      }
+      document.getElementById("formulario-usuario").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const mensaje = document.getElementById("mensaje-error");
+        mensaje.className = "mensaje-error";
+        mensaje.textContent = "";
+        try {
+          await createUser({ email: document.getElementById("email").value, password: document.getElementById("password").value, role: document.getElementById("role").value });
+          event.target.reset();
+          mensaje.className = "mensaje-exito";
+          mensaje.textContent = "Usuario creado correctamente";
+          await cargarUsuarios();
+        } catch (error) { mensaje.textContent = error.message; }
+      });
+      if (requireRole("admin")) {
+        document.getElementById("logoutButton").addEventListener("click", async () => { await signOut(auth); localStorage.removeItem("currentUser"); window.location.href = "../../index.html"; });
+        cargarUsuarios().catch((err) => { document.getElementById("cuerpo-tabla-usuarios").innerHTML = "<tr><td colspan=\"2\">No se pudo consultar Firestore</td></tr>"; document.getElementById("mensaje-error").textContent = err.message; });
+      }
+    </script>
   </body>
 </html>

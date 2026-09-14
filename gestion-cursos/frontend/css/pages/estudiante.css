@@ -1,6 +1,5 @@
 body {
-  background: var(--color-bg);
-  padding: 2rem;
+  background: #f7f8f4;
 }
 
 .course-list {
@@ -9,3 +8,6 @@ body {
   gap: 1rem;
   margin-top: 2rem;
 }
+
+.role-estudiante .etiqueta-rol { color: #496a8d; border-color: #496a8d; }
+.role-estudiante .panel-link strong { color: #496a8d; }

@@ -19,11 +19,10 @@ app.use(express.json());
 
 async function proxyToService(serviceName, req, res) {
   const baseUrl = SERVICES[serviceName];
-  const targetPath = req.originalUrl.replace(/^\/api\/(users|courses|enrollments|notifications)/, '');
-  const url = new URL(`${targetPath || '/'}${req.originalUrl.includes('?') ? '' : ''}`, baseUrl);
+  console.log(`[gateway] ${req.method} ${req.originalUrl} auth=${Boolean(req.headers.authorization)}`);
 
   try {
-    const response = await fetch(`${baseUrl}${targetPath || '/'}`, {
+    const response = await fetch(`${baseUrl}${req.originalUrl}`, {
       method: req.method,
       headers: {
         'Content-Type': 'application/json',
@@ -49,6 +48,7 @@ app.get('/ping', (req, res) => {
 app.get('/api/users', (req, res) => proxyToService('users', req, res));
 app.get('/api/users/:id', (req, res) => proxyToService('users', req, res));
 app.post('/api/users', (req, res) => proxyToService('users', req, res));
+app.post('/api/users/profile', (req, res) => proxyToService('users', req, res));
 
 app.get('/api/courses', (req, res) => proxyToService('courses', req, res));
 app.get('/api/courses/:id', (req, res) => proxyToService('courses', req, res));

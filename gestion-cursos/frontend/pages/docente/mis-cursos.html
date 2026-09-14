@@ -3,9 +3,38 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mis Cursos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mis cursos | Docente</title>
+    <link rel="stylesheet" href="../../css/styles.css" />
+    <link rel="stylesheet" href="../../css/pages/docente.css" />
+    <script type="importmap">
+      {"imports":{"firebase/app":"https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js","firebase/auth":"https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js","firebase/firestore":"https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js"}}
+    </script>
   </head>
-  <body>
-    <h1>Mis Cursos</h1>
+  <body class="role-docente">
+    <button class="boton-volver" type="button" onclick="if (history.length > 1) history.back();">Volver</button>
+    <header class="encabezado"><h1>Mis cursos <span class="etiqueta-rol">docente</span></h1><button class="salir" id="logoutButton" type="button" onclick="localStorage.removeItem('currentUser'); window.location.href='/index.html';">Cerrar sesión</button></header>
+    <main><div class="course-list" id="courseList"><p>Cargando cursos...</p></div><p class="mensaje-error" id="mensaje-error"></p></main>
+    <script type="module">
+      import { signOut } from "firebase/auth";
+      import { auth } from "../../js/config/firebaseConfig.js";
+      import { requireRole } from "../../js/auth/authGuard.js";
+      import { getCourses } from "../../js/services/coursesApi.js";
+      import { getStudents } from "../../js/services/usersApi.js";
+      async function cargarCursos() {
+        const cursos = await getCourses();
+        document.getElementById("courseList").innerHTML = cursos.length
+          ? cursos.map((curso) => `<article class="panel"><strong>${curso.name || curso.nombre}</strong><span>Docente: ${curso.teacherUid || curso.docenteUid || "Asignado"}</span></article>`).join("")
+          : "<p>No tienes cursos asignados.</p>";
+      }
+      async function cargarEstudiantes() {
+        const estudiantes = await getStudents();
+        document.getElementById("studentList").innerHTML = estudiantes.map((student) => `<article class="panel"><strong>${student.displayName || student.name || "Estudiante"}</strong><span>${student.email}</span></article>`).join("") || "<p>No hay estudiantes registrados.</p>";
+      }
+      if (requireRole("docente")) {
+        document.getElementById("logoutButton").addEventListener("click", async () => { await signOut(auth); localStorage.removeItem("currentUser"); window.location.href = "../../index.html"; });
+        Promise.all([cargarCursos(), cargarEstudiantes()]).catch((err) => { document.getElementById("mensaje-error").textContent = err.message; });
+      }
+    </script>
   </body>
 </html>

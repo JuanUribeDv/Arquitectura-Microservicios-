@@ -3,7 +3,7 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAvPykRpJu8l-8K26wLIaRzJhIIqvGpH_M",
+  apiKey: "AIzaSyC3sNVu2SZZ_M2jMTB6gQPTjCMdElxyFmQ",
   authDomain: "arq-microservicios-f5474.firebaseapp.com",
   projectId: "arq-microservicios-f5474",
   storageBucket: "arq-microservicios-f5474.firebasestorage.app",
@@ -15,4 +15,5 @@ const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+window.firebaseAuth = auth;
 export default app;

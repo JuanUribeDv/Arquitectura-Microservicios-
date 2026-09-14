@@ -1,3 +1,5 @@
+import { apiRequest } from "./apiClient.js";
+
 async function getUsers() {
   return apiRequest("/users");
 }
@@ -8,3 +10,9 @@ async function createUser(userData) {
     body: JSON.stringify(userData),
   });
 }
+
+async function getStudents() {
+  return apiRequest("/users/students");
+}
+
+export { getUsers, createUser, getStudents };
