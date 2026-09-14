@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestión de Cursos | Login</title>
+    <link rel="stylesheet" href="./css/base/reset.css" />
+    <link rel="stylesheet" href="./css/base/variables.css" />
+    <link rel="stylesheet" href="./css/pages/login.css" />
+  </head>
+  <body class="login-page">
+    <main class="login-shell">
+      <section class="login-card">
+        <div class="brand-block">
+          <span class="brand-badge">GC</span>
+          <h1>Gestión de Cursos</h1>
+          <p>Accede a tu panel según tu rol.</p>
+        </div>
+
+        <form id="loginForm" class="login-form">
+          <label>
+            <span>Email</span>
+            <input type="email" id="email" placeholder="usuario@correo.com" required />
+          </label>
+
+          <label>
+            <span>Contraseña</span>
+            <input type="password" id="password" placeholder="••••••••" required />
+          </label>
+
+          <label>
+            <span>Rol</span>
+            <select id="role">
+              <option value="admin">Administrador</option>
+              <option value="docente">Docente</option>
+              <option value="estudiante">Estudiante</option>
+            </select>
+          </label>
+
+          <button type="submit" class="btn-primary">Iniciar sesión</button>
+        </form>
+      </section>
+    </main>
+
+    <script src="./js/config/firebaseConfig.js"></script>
+    <script src="./js/auth/login.js"></script>
+  </body>
+</html>

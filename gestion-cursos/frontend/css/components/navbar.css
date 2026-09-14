@@ -1,0 +1,22 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: var(--color-secondary);
+  color: white;
+}
+
+.navbar nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.navbar a {
+  color: white;
+  opacity: 0.9;
+}
+
+.navbar a:hover {
+  opacity: 1;
+}

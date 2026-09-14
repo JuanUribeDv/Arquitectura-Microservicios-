@@ -1,0 +1,11 @@
+body {
+  background: var(--color-bg);
+  padding: 2rem;
+}
+
+.panel {
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+}
